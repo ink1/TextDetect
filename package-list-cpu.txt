@@ -1,7 +1,7 @@
 # This file may be used to create an environment using:
 # $ conda create --name <env> --file <this file>
 # platform: linux-64
-_tflow_180_select=1.0=gpu
+_tflow_180_select=3.0=eigen
 absl-py=0.2.2=py36_0
 astor=0.6.2=py36_0
 blas=1.0=mkl
@@ -10,9 +10,6 @@ bzip2=1.0.6=h14c3975_5
 ca-certificates=2018.03.07=0
 cairo=1.14.12=h7636065_2
 certifi=2018.4.16=py36_0
-cudatoolkit=9.0=h13b8566_0
-cudnn=7.1.2=cuda9.0_0
-cupti=9.0.176=0
 ffmpeg=4.0=h04d0a96_0
 fontconfig=2.12.6=h49f89f6_0
 freetype=2.8=hab7d2ae_1
@@ -28,6 +25,7 @@ icu=58.2=h9c2bf20_1
 intel-openmp=2018.0.3=0
 jasper=1.900.1=hd497a04_4
 jpeg=9b=h024ee3a_2
+keras=2.2.0=0
 keras-applications=1.0.2=py36_0
 keras-base=2.2.0=py36_0
 keras-preprocessing=1.0.1=py36_0
@@ -66,9 +64,8 @@ setuptools=39.2.0=py36_0
 six=1.11.0=py36h372c433_1
 sqlite=3.24.0=h84994c4_0
 tensorboard=1.8.0=py36hf484d3e_0
-tensorflow=1.8.0=hb11d968_0
-tensorflow-base=1.8.0=py36hc1a7637_0
-tensorflow-gpu=1.8.0=h7b35bdc_0
+tensorflow=1.8.0=h57681fa_0
+tensorflow-base=1.8.0=py36h5f64886_0
 termcolor=1.1.0=py36_1
 tk=8.6.7=hc745277_3
 werkzeug=0.14.1=py36_0
