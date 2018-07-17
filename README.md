@@ -15,7 +15,7 @@ wget http://lawebdegalindo.com/wp-content/uploads/2012/10/mamo_dicom_p.jpg
 conda create -y --name textdetect python=3.6 tensorflow-gpu keras py-opencv
 conda activate textdetect
 
-./textdetect.py mamo_dicom_p.jpg -f
+./textdetect.py mamo_dicom_p.jpg -f 2> /dev/null
 
 conda deactivate
 ```

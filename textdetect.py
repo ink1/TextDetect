@@ -114,22 +114,16 @@ batch_size = 256
 for scale in range(max_scale):
     # scales: 1=2^0, 2^(i*(0.5))
     print('scale', scale)
-    if scale != 0:
-        sfactor = 2**(scale*0.5)
-        rescaled_size = (int(gray_image.shape[0]/sfactor), int(gray_image.shape[1]/sfactor))
-        img = cv2.resize(gray_image, (rescaled_size[1], rescaled_size[0]), interpolation = cv2.INTER_NEAREST)
-    else:
-        sfactor = 1.0
-        rescaled_size = (gray_image.shape[0], gray_image.shape[1])
-        img = np.copy(gray_image)
+    sfactor = 2**(scale*0.5)
+    # scale down to the size which is a multiple of shift
+    newsize = ((int(gray_image.shape[0]/sfactor)//shift)*shift,
+               (int(gray_image.shape[1]/sfactor)//shift)*shift)
+    img = cv2.resize(gray_image, (newsize[1], newsize[0]), interpolation = cv2.INTER_NEAREST)
 
     if img.shape[0] < 2*sz or img.shape[1] < 2*sz:
         print('scale too small', scale)
         break
 
-    # crop to size which is multiple of shift; assume sz is also a multiple
-    newsize = ((img.shape[0]//shift)*shift, (img.shape[1]//shift)*shift)
-    img = img[0:newsize[0], 0:newsize[1]]
     print('new img shape', img.shape)
 
     # pad with black
@@ -138,12 +132,12 @@ for scale in range(max_scale):
 
     ny = newsize[0]//shift
     nx = newsize[1]//shift
-    print('target prob sz:', ny, nx)
+    #print('target prob sz:', ny, nx)
 
     # padded size
     ysz = img.shape[0]
     xsz = img.shape[1]
-    print('padded size:', ysz, xsz)
+    #print('padded size:', ysz, xsz)
 
     img = np.asarray(img, dtype=np.float32)
     # normalise image
@@ -154,7 +148,7 @@ for scale in range(max_scale):
         data_size = nx*ny
     else:
         data_size = (nx*ny//batch_size + 1)*batch_size
-    print('nx*ny', nx*ny, 'data_size', data_size)
+    #print('nx*ny', nx*ny, 'data_size', data_size)
 
     xdata = np.zeros((data_size, sz, sz, 1), dtype=np.float32)
     ydata = np.zeros((data_size), dtype=np.float32)
@@ -179,7 +173,7 @@ for scale in range(max_scale):
     img = img*255.
     img = np.uint8(np.clip(img, 0, 255))
 
-    #img = cv2.resize(img, (org.shape[1], org.shape[0]), interpolation = cv2.INTER_NEAREST)
+    #img = cv2.resize(img, (gray_image.shape[1], gray_image.shape[0]), interpolation = cv2.INTER_NEAREST)
     #cv2.imwrite('img.' + f + '.png', img)
 
     ret, thresh = cv2.threshold(img, args.thr_level, 255, 0)
@@ -206,9 +200,11 @@ for scale in range(max_scale):
     # cv.INTER_AREA for shrinking
     # cv.INTER_LANCZOS4 Lanczos interpolation over 8x8 neighborhood
 
-    # resize back including scale change
+    # resize to original size
     #                               width, height
-    thresh = cv2.resize(thresh, (int(newsize[1]*sfactor), int(newsize[0]*sfactor)), interpolation = cv2.INTER_NEAREST)
+    thresh = cv2.resize(thresh, (gray_image.shape[1], gray_image.shape[0]), interpolation = cv2.INTER_NEAREST)
+    # this should not be needed when using cv2.INTER_NEAREST
+    ret, thresh = cv2.threshold(thresh, args.thr_level, 255, 0)
 
     # find contours
     img2, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
@@ -219,9 +215,9 @@ for scale in range(max_scale):
         # args: image to draw on, contours list (-1 means all contours), colour, thickness in pixels (-1 to fill)
         image = np.copy(original_image)
         if len(original_image.shape) == 2:
-            image[:newsize[0], :newsize[1]] = cv2.drawContours(image[:newsize[0], :newsize[1]], contours, -1, 255, fill)
+            image = cv2.drawContours(image, contours, -1, 255, fill)
         else:
-            image[:newsize[0], :newsize[1], :] = cv2.drawContours(image[:newsize[0], :newsize[1], :], contours, -1, (0, 255, 0), fill)
+            image = cv2.drawContours(image, contours, -1, (0, 255, 0), fill)
 
         fname = '%s.t%03d.sc%d.sh%02d.k%d.png' % (basename[:-4], thr_level, scale, shift, kernel_size)
         #basename[:-4] + '.t' + str(thr_level) + '.sc' + str(scale) +'.sh' + str(shift) + '.png'
@@ -229,7 +225,7 @@ for scale in range(max_scale):
 
     # aggregate masks
     mask = np.zeros((gray_image.shape[0], gray_image.shape[1]), dtype=np.uint8)
-    mask[:newsize[0], :newsize[1]] = cv2.drawContours(mask[:newsize[0], :newsize[1]], contours, -1, 255, fill)
+    mask = cv2.drawContours(mask, contours, -1, 255, fill)
     aggregate_mask = np.where(mask > 0, mask, aggregate_mask)
 
 
